@@ -1,0 +1,21 @@
+# Phase 4: Middleware & Rate Limit Log
+Date: 2026-02-24
+Status: COMPLETED
+
+## Summary of Changes
+- Implemented `RequestIDMiddleware` in `app/middlewares/request_id.py`.
+- Configured `slowapi` in `app/core/rate_limit.py`.
+- Implemented `rate_limit_exceeded_handler` to return JSON with `UnifiedResponse` format (HTTP 429).
+- Integrated Middleware and Limiter into `main.py`.
+- Applied rate limit (5 req/min) to the root endpoint as a demonstration.
+- Updated `requirements.txt` with `slowapi`.
+
+## Test Results
+- Total tests: 2 (Integration)
+- Passed: 2
+- Checked: X-Request-ID header existence and validity (UUID).
+- Checked: Rate limiting behavior and error response structure.
+
+## Notes
+- Request ID is available via `request.state.request_id`.
+- Rate limit is IP-based.

@@ -1,0 +1,43 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+class Settings(BaseSettings):
+    """
+        Lớp cấu hình trung tâm của ứng dụng.
+
+        Lớp này kế thừa từ BaseSettings của Pydantic để tự động
+        đọc cấu hình từ biến môi trường (environment variables)
+        và file `.env`.
+    """
+    PROJECT_NAME: str
+    API_V1_STR: str
+    ENVIRONMENT: str
+    
+    # Logging Settings
+    LOG_LEVEL: str
+    LOG_FILE: str
+    LOG_MAX_BYTES: int
+    LOG_BACKUP_COUNT: int
+    
+    # MongoDB Settings
+    MONGODB_URL: str
+    DATABASE_NAME: str
+    MIN_POOL_SIZE: int
+    MAX_POOL_SIZE: int
+    MONGODB_MAX_RETRIES: int
+    MONGODB_RETRY_DELAY: int
+    
+    # Security Settings
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    REFRESH_TOKEN_EXPIRE_MINUTES: int
+    
+    # AI Settings
+    GEMINI_API_KEY: str | None = None
+    GEMINI_MODEL: str
+    GEMINI_TIMEOUT: float
+    GEMINI_MAX_HISTORY: int
+
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
+
+settings = Settings()
