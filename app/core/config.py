@@ -31,12 +31,18 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_MINUTES: int
-    
+    REFRESH_TOKEN_EXPIRE_SECONDS: int
+
     # AI Settings
     GEMINI_API_KEY: str | None = None
     GEMINI_MODEL: str
     GEMINI_TIMEOUT: float
     GEMINI_MAX_HISTORY: int
+
+    # Static Files and Uploads
+    STATIC_FILES_URL: str = "http://localhost:8000/static"
+    UPLOADS_DIR: str = "static/uploads"
+
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
 

@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator, ConfigDict
@@ -34,19 +35,61 @@ class UserResponse(UserBase):
     Schema trả về thông tin người dùng trong API response.
     """
     id: str = Field(..., validation_alias="_id", description="ID duy nhất của người dùng")
+    fullname: str = Field(..., min_length=3, max_length=50)
+    email: str = Field(...)
+    phone_number: str = Field(..., min_length=10, max_length=15, )
     is_active: bool
     role: str
 
-class UserMeResponse(UserBase):
+class UserRegisterResponse(UserBase):
+    """
+    Schema trả về thông tin sau khi đăng kí trong API response.
+    """
+    id: str = Field(..., validation_alias="_id", description="ID duy nhất của người dùng")
+    fullname: str = Field(...)
+    email: str = Field(...)
+    phone_number: str = Field(..., min_length=10, max_length=15, )
+    avatar_url: Optional[str] = None
+    is_active: bool
+    role: str
+    created_at: datetime
+
+# class UserMeResponse(UserBase):
+#     """
+#     Schema trả về thông tin người dùng trong API response.
+#     """
+#     id: str = Field(..., validation_alias="_id", description="ID duy nhất của người dùng")
+#     is_active: bool
+#     role: str
+#     avatar_url: Optional[str] = None
+
+class UserMeResponse(BaseModel):
     """
     Schema trả về thông tin người dùng trong API response.
     """
     id: str = Field(..., validation_alias="_id", description="ID duy nhất của người dùng")
+    fullname: str = Field(..., min_length=3, max_length=50)
+    email: str = Field(...)
+    phone_number: str = Field(..., min_length=10, max_length=15, )
     is_active: bool
     role: str
     avatar_url: Optional[str] = None
 
 
+class UserUpdate(BaseModel):
+    fullname: Optional[str] = Field(None, min_length=3, max_length=50)
+    email: Optional[str] = Field(None)
+    phone_number: Optional[str] = Field(None, min_length=10, max_length=15)
+    # avatar_url: Optional[str] = None
+
+class UserUpdateResponse(BaseModel):
+    id: str | None = Field(None, validation_alias="_id", description="ID duy nhất của người dùng")
+    fullname: str | None = Field(None, min_length=3, max_length=50)
+    email: str | None = None
+    phone_number: str | None = Field(None, min_length=10, max_length=15)
+    is_active: bool
+    role: str
+    avatar_url: str | None = None
 
 class UserInDB(UserBase):
     """

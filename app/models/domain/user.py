@@ -28,7 +28,7 @@ class User(BaseModel):
     hashed_password: str
     is_active: bool = True
     role: str = "user"
-    avatar: str | None = Field(None)
+    avatar_url: str | None = Field(None)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

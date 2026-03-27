@@ -14,9 +14,9 @@
   - Use def for pure functions and async def for asynchronous operations.
   - Use type hints for all function signatures. Prefer Pydantic models over raw dictionaries for input validation.
   - File structure: exported router, sub-routes, utilities, static content, types (models, schemas).
-  - Avoid unnecessary curly braces in conditional statements.
-  - For single-line statements in conditionals, omit curly braces.
-  - Use concise, one-line syntax for simple conditional statements (e.g., if condition: do_something()).
+  - Prioritize readability over conciseness in conditional statements.
+  - Use single-line conditionals only when they remain clear and easy to understand.
+  - Prefer multi-line structure when logic becomes complex.
   
   Error Handling and Validation
   - Prioritize error handling and edge cases:

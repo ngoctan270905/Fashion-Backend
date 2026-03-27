@@ -14,12 +14,19 @@ from app.core.rate_limit import limiter, rate_limit_exceeded_handler
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
 from app.middlewares.request_id import RequestIDMiddleware
 from app.api.v1.router import api_router
+from starlette.staticfiles import StaticFiles # New import
+from pathlib import Path # New import
 
 # Configure logging before FastAPI app initialization
 configure_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Ensure uploads directory exists
+    uploads_path = Path(settings.UPLOADS_DIR)
+    uploads_path.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Đảm bảo thư mục uploads '{uploads_path}' tồn tại.")
+
     await connect_to_mongo()
     logger.info("Khởi động ứng dụng thành công.")
     yield
@@ -38,6 +45,14 @@ app = FastAPI(
         {"name": "Health Check", "description": "Endpoints để giám sát hệ thống"}
     ]
 )
+
+# Mount static files (for avatars etc.)
+app.mount(
+    "/static",
+    StaticFiles(directory=settings.UPLOADS_DIR.split('/')[0]), # Mount the 'static' directory
+    name="static"
+)
+
 
 # ---- CORS Middleware ----
 app.add_middleware(
