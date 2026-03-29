@@ -55,10 +55,12 @@ class UserService:
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"User with id {user_id} not found."
                 )
+            current_user_raw["_id"] = str(current_user_raw["_id"])
             return UserUpdateResponse(**current_user_raw)
 
 
         updated_user_raw = await self._user_repository.update_user(user_id, update_data)
+        print(f"test : {user_update_data}")
         if not updated_user_raw:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
