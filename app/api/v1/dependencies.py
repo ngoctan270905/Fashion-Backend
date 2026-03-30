@@ -19,7 +19,8 @@ oauth2_scheme = OAuth2PasswordBearer(
 
 async def get_user_service(db = Depends(get_database)) -> UserService:
     user_repo = UserRepository(collection=db["users"])
-    return UserService(user_repository=user_repo)
+    token_repo = TokenRepository(collection=db["refresh_tokens"])
+    return UserService(user_repository=user_repo, token_repo=token_repo)
 
 async def get_token_service(db = Depends(get_database)) -> TokenService:
     token_repo = TokenRepository(collection=db["refresh_tokens"])
@@ -57,3 +58,15 @@ async def get_current_user(
     user_raw['_id'] = str(user_id)
         
     return UserMeResponse(**user_raw)
+
+
+async def get_admin_user(current_user: UserMeResponse = Depends(get_current_user)) -> UserMeResponse:
+    """
+    Dependency để đảm bảo người dùng hiện tại có vai trò "admin".
+    """
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn không có quyền truy cập vào tài nguyên này."
+        )
+    return current_user

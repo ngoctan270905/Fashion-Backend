@@ -1,9 +1,9 @@
-from typing import Optional
+from typing import Optional, List
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form # Added UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Query
 from app.schemas.base import UnifiedResponse
-from app.schemas.user import UserResponse, UserMeResponse, UserUpdate, UserUpdateResponse
-from app.api.v1.dependencies import get_current_user, get_user_service
+from app.schemas.user import UserResponse, UserMeResponse, UserUpdate, UserUpdateResponse, UserListResponse
+from app.api.v1.dependencies import get_current_user, get_user_service, get_admin_user
 from app.models.domain.user import User
 from app.services.user_service import UserService
 from app.core.config import settings # New import
