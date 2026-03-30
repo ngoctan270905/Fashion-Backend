@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File # Added UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form # Added UploadFile, File
 from app.schemas.base import UnifiedResponse
 from app.schemas.user import UserResponse, UserMeResponse, UserUpdate, UserUpdateResponse
 from app.api.v1.dependencies import get_current_user, get_user_service
@@ -32,7 +32,9 @@ async def read_current_user(current_user: UserMeResponse = Depends(get_current_u
     summary="Cập nhật thông tin người dùng hiện tại"
 )
 async def update_current_user(
-    user_update_data: UserUpdate = Depends(),
+    fullname: Optional[str] = Form(None),
+    email: Optional[str] = Form(None),
+    phone_number: Optional[str] = Form(None),
     avatar_file: Optional[UploadFile] = File(None),
     current_user: UserMeResponse = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service)
@@ -40,6 +42,11 @@ async def update_current_user(
     """
     Endpoint cho phép người dùng đã xác thực cập nhật thông tin cá nhân của họ.
     """
+    user_update_data = UserUpdate(
+        fullname=fullname,
+        email=email,
+        phone_number=phone_number
+    )
     updated_user_domain = await user_service.update_user(current_user.id, user_update_data, avatar_file)
 
     # Construct full avatar URL if available
