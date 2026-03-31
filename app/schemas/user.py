@@ -80,6 +80,8 @@ class UserUpdate(BaseModel):
     fullname: Optional[str] = Field(None, min_length=3, max_length=50)
     email: Optional[str] = Field(None)
     phone_number: Optional[str] = Field(None, min_length=10, max_length=15)
+    role: Optional[str] = None
+    is_active: Optional[bool] = None
     # avatar_url: Optional[str] = None
 
 class UserUpdateResponse(BaseModel):

@@ -54,6 +54,8 @@ async def update_user_by_id(
     fullname: Optional[str] = Form(None),
     email: Optional[str] = Form(None),
     phone_number: Optional[str] = Form(None),
+    role: Optional[str] = Form(None),
+    is_active: Optional[bool] = Form(None),
     avatar_file: Optional[UploadFile] = File(None),
     user_service: UserService = Depends(get_user_service)
 ):
@@ -63,7 +65,9 @@ async def update_user_by_id(
     user_update_data = UserUpdate(
         fullname=fullname,
         email=email,
-        phone_number=phone_number
+        phone_number=phone_number,
+        role=role,
+        is_active=is_active
     )
 
     updated_user_response = await user_service.update_user(user_id, user_update_data, avatar_file)
