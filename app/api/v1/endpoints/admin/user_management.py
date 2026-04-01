@@ -85,7 +85,7 @@ async def update_user_by_id(
 
 @router.delete(
     "/{user_id}",
-    response_model=UnifiedResponse[dict],
+    response_model=UnifiedResponse[str],
     summary="Xóa tài khoản người dùng bởi ID (Admin Only)",
     dependencies=[Depends(get_admin_user)]
 )

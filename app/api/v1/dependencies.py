@@ -9,7 +9,9 @@ from app.repositories.user_repository import UserRepository
 from app.schemas.user import UserMeResponse
 from app.services.auth_service import AuthService
 from app.services.token_service import TokenService
-from app.services.user_service import UserService # New import
+from app.services.user_service import UserService
+from app.services.category_service import CategoryService # New import
+from app.repositories.category_repository import CategoryRepository # New import
 from app.models.domain.user import User
 
 # Định nghĩa scheme xác thực OAuth2 (header Authorization: Bearer <token>)
@@ -29,6 +31,10 @@ async def get_token_service(db = Depends(get_database)) -> TokenService:
 async def get_auth_service(db = Depends(get_database), token_service: TokenService = Depends(get_token_service)) -> AuthService:
     user_repo = UserRepository(collection=db["users"])
     return AuthService(user_repo=user_repo,token_service=token_service)
+
+async def get_category_service(db = Depends(get_database)) -> CategoryService:
+    category_repo = CategoryRepository(collection=db["categories"])
+    return CategoryService(category_repository=category_repo)
 
 
 async def get_current_user(

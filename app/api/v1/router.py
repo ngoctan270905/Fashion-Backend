@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from app.api.v1.endpoints import health, auth, chat, users
-from app.api.v1.endpoints.admin import user_management
+from app.api.v1.endpoints.admin import user_management, categories # Updated import
 
 api_router = APIRouter()
 
@@ -14,4 +14,9 @@ api_router.include_router(
     user_management.router,
     prefix="/admin/users",
     tags=["Admin - User Management"]
+)
+api_router.include_router(
+    categories.router,
+    prefix="/admin/categories", # Changed prefix
+    tags=["Admin - Categories"] # Changed tags
 )
