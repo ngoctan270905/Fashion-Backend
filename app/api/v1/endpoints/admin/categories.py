@@ -2,7 +2,7 @@ from typing import Optional, List
 from fastapi import APIRouter, Depends, Query, status, HTTPException, Form, UploadFile, File
 from app.schemas.base import UnifiedResponse
 from app.schemas.category import CategoryListResponse, CategoryResponse, CategoryCreate, CategoryUpdate, \
-    CategoryCreateResponse
+    CategoryCreateResponse, CategoryUpdateResponse
 from app.api.v1.dependencies import get_category_service, get_admin_user
 from app.services.category_service import CategoryService
 from app.core.exceptions import NotFoundException, ConflictException, BadRequestException, InternalServerException
@@ -18,11 +18,12 @@ router = APIRouter()
     dependencies=[Depends(get_admin_user)]
 )
 async def list_categories(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(10, ge=1, le=1000),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=1000),
     category_service: CategoryService = Depends(get_category_service)
 ):
-    categories_list_response = await category_service.get_all_categories(skip=skip, limit=limit)
+    categories_list_response = await category_service.get_all_categories(page=page, page_size=page_size)
+    print(f" test {categories_list_response}")
     
     for category in categories_list_response.items:
         if category.image_url:
@@ -91,7 +92,7 @@ async def create_category(
 # ======================================================================================================================
 @router.put(
     "/{category_id}",
-    response_model=UnifiedResponse[CategoryResponse],
+    response_model=UnifiedResponse[CategoryUpdateResponse],
     summary="Cập nhật Category theo ID",
     dependencies=[Depends(get_admin_user)]
 )
@@ -125,7 +126,7 @@ async def update_category(
 # ======================================================================================================================
 @router.delete(
     "/{category_id}",
-    response_model=UnifiedResponse[dict],
+    response_model=UnifiedResponse[str],
     summary="Xóa Category theo ID",
     dependencies=[Depends(get_admin_user)]
 )
@@ -137,6 +138,7 @@ async def delete_category(
     await category_service.delete_category(category_id)
     return UnifiedResponse(
         success=True,
-        message=f"Category with ID {category_id} deleted successfully"
+        message=f"Category with ID {category_id} deleted successfully",
+        data="ok"
     )
 

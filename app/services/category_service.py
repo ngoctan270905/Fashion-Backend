@@ -1,7 +1,7 @@
 from typing import Optional, List, Dict, Any
 from app.repositories.category_repository import CategoryRepository
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse, CategoryListResponse, \
-    CategoryListItem, CategoryCreateResponse
+    CategoryListItem, CategoryCreateResponse, CategoryUpdateResponse
 from app.core.exceptions import NotFoundException, ConflictException, BadRequestException, InternalServerException
 from fastapi import UploadFile, HTTPException, status
 from uuid import uuid4
@@ -20,11 +20,15 @@ class CategoryService:
     async def create_category(self, category_data: CategoryCreate, image_file: Optional[UploadFile]) -> CategoryCreateResponse:
         # 1. Kiểm tra tồn tại name và slug
         category_name = await self._category_repository.get_category_by_name(category_data.name)
+
         if category_name:
             raise ConflictException(detail=f"Danh mục {category_data.name} đã tồn tại.")
+
         if not category_data.slug:
             category_data.slug = slugify(category_data.name)
+
         slug = await self._category_repository.is_slug_taken(category_data.slug)
+
         if slug:
             raise ConflictException(detail=f"Slug '{category_data.slug}' đã tồn tại.")
 
@@ -32,11 +36,11 @@ class CategoryService:
         category_level = await self._calculate_category_level(category_data.parent_id)
         
         # 3. Xử lí upload ảnh
-        # Handle image upload
         image_url = await self._handle_image_upload(image_file)
 
         # Chuyển model Pydantic thành dictionary để sử dụng trong repository
         category_dict = category_data.model_dump(exclude_unset=True)
+        category_dict["image_url"] = image_url
         category_dict["level"] = category_level
         max_sort_order = await self._category_repository.get_max_sort_order()
         category_dict["sort_order"] = max_sort_order + 1
@@ -44,13 +48,12 @@ class CategoryService:
         category_dict["updated_at"] = datetime.now(timezone.utc)
 
         created_category_raw = await self._category_repository.create_category(category_dict)
-        return CategoryCreateResponse(**created_category_raw)
 
+        return CategoryCreateResponse.model_validate(created_category_raw)
+
+
+    # Hàm tính level cho category ======================================================================================
     async def _calculate_category_level(self, parent_id: Optional[str]) -> int:
-        """
-        Tính level cho category mới
-        """
-
         # Không có parent → danh mục gốc
         if not parent_id:
             return 1
@@ -67,10 +70,10 @@ class CategoryService:
                 detail="Parent category must be a top-level category (level 1)."
             )
 
-        # Hard code level 2
         return 2
 
 
+    # Hàm tính level cho category ======================================================================================
     async def _handle_image_upload(self, image_file: Optional[UploadFile]) -> Optional[str]:
         if not image_file:
             return None
@@ -79,7 +82,7 @@ class CategoryService:
         if not image_file.filename:
             raise BadRequestException(detail="Image file is missing filename.")
 
-        # 2. Kiểm tra content-type (chính xác hơn)
+        # 2. Kiểm tra content-type
         if image_file.content_type not in settings.ALLOWED_IMAGE_TYPES:
             raise BadRequestException(
                 detail=f"Invalid image file type. Allowed: {', '.join(settings.ALLOWED_IMAGE_TYPES)}"
@@ -112,25 +115,38 @@ class CategoryService:
                     )
                 await f.write(chunk)
 
-        # Trả về URL (không mutate category_data)
+        # Trả về URL
         return f"{Path(settings.UPLOADS_DIR).name}/{unique_filename}"
+
+
+    # GET category by id ===============================================================================================
     async def get_category_by_id(self, category_id: str) -> CategoryResponse:
         category_raw = await self._category_repository.get_category_by_id(category_id)
+
         if not category_raw:
             raise NotFoundException(detail=f"Category with id {category_id} not found.")
-        return CategoryResponse(**category_raw)
 
-    async def get_all_categories(self, skip: int = 0, limit: int = 100) -> CategoryListResponse:
-        categories_raw, total_count = await self._category_repository.get_all_categories(skip, limit)
-        category_items = [CategoryListItem(**category_data) for category_data in categories_raw]
+        return CategoryResponse.model_validate(category_raw)
+
+    # Lấy danh sách category kèm phân trang ============================================================================
+    async def get_all_categories(self, page: int = 1, page_size: int = 10) -> CategoryListResponse:
+
+        categories_raw, total_count = await self._category_repository.get_all_categories(page, page_size)
+
+        category_items = []
+
+        for data in categories_raw:
+            item = CategoryListItem.model_validate(data)
+            category_items.append(item)
+
         return CategoryListResponse(
             total_count=total_count,
-            page=skip // limit + 1 if limit > 0 else 1, # Calculate current page
-            page_size=limit,
+            page=page,
+            page_size=page_size,
             items=category_items
         )
 
-    async def update_category(self, category_id: str, update_data: CategoryUpdate, image_file: Optional[UploadFile]) -> CategoryResponse:
+    async def update_category(self, category_id: str, update_data: CategoryUpdate, image_file: Optional[UploadFile]) -> CategoryUpdateResponse:
         existing_category_raw = await self._category_repository.get_category_by_id(category_id)
         if not existing_category_raw:
             raise NotFoundException(detail=f"Category with id {category_id} not found.")
@@ -204,12 +220,12 @@ class CategoryService:
                     except OSError as e:
                         print(f"Error deleting old image file {old_image_path}: {e}")
 
-        update_dict["updated_at"] = datetime.utcnow()
+        update_dict["updated_at"] = datetime.now(timezone.utc)
 
         updated_category_raw = await self._category_repository.update_category(category_id, update_dict)
         if not updated_category_raw:
             raise InternalServerException(detail="Failed to update category.")
-        return CategoryResponse(**updated_category_raw)
+        return CategoryUpdateResponse(**updated_category_raw)
 
     async def delete_category(self, category_id: str) -> bool:
         category_to_delete_raw = await self._category_repository.get_category_by_id(category_id)
