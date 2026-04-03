@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from app.api.v1.endpoints import health, auth, chat, users
-from app.api.v1.endpoints.admin import user_management, categories # Updated import
+from app.api.v1.endpoints.admin import user_management, categories, attributes, products # Updated import
 
 api_router = APIRouter()
 
@@ -19,4 +19,14 @@ api_router.include_router(
     categories.router,
     prefix="/admin/categories", # Changed prefix
     tags=["Admin - Categories"] # Changed tags
+)
+api_router.include_router(
+    attributes.router,
+    prefix="/admin",
+    tags=["Admin - Attributes"]
+)
+api_router.include_router(
+    products.router,
+    prefix="/admin",
+    tags=["Admin - Products"]
 )
