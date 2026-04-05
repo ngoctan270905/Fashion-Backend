@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     # Static Files and Uploads
     STATIC_FILES_URL: str = "http://localhost:8000/static"
     UPLOADS_DIR: str = "static/uploads"
+    MAX_UPLOAD_SIZE_MB: int = 5
+    ALLOWED_IMAGE_TYPES: set[str] = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+    ALLOWED_EXTENSIONS: set[str] = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)

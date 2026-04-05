@@ -20,8 +20,6 @@ class RefreshTokenRepository:
         Retrieve a refresh token by its token string.
         """
         refresh_token_raw = await self.collection.find_one({"refresh_token": token})
-        if not refresh_token_raw:
-            raise NotFoundException(detail="Refresh token not found")
         return RefreshTokenInDB(**refresh_token_raw)
 
     async def delete_by_token(self, token: str):

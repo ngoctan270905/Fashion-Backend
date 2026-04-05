@@ -1,68 +1,99 @@
-# Tính năng: API Cập nhật Thông tin Cá nhân Người dùng
+# Feature Prompt: Update User Information API (Admin)
 
-Tài liệu này phác thảo kế hoạch phát triển theo từng giai đoạn để triển khai một điểm cuối API cho phép người dùng đã xác thực cập nhật thông tin cá nhân của họ.
+## 1. Feature Name
+Update User Information (Admin)
 
-## Giai đoạn 1: Định nghĩa Điểm cuối API và Xác thực Đầu vào
+## 2. User Story
+As an administrator, I want to update the details of a specific user, including their full name, email, phone number, and avatar, so that I can maintain accurate user records and manage their profiles effectively.
 
-1.  **Định nghĩa Điểm cuối API:**
-    *   Điểm cuối: `/api/v1/users/me`
-    *   Phương thức HTTP: `PUT` (để cập nhật toàn bộ).
-    *   Mô tả: Cho phép người dùng đã xác thực cập nhật toàn bộ thông tin hồ sơ của chính họ.
+## 3. API Endpoint
+- **Method:** `PUT`
+- **Path:** `/api/v1/users/{user_id}`
+- **Description:** Updates the information of a specific user by their ID.
 
-2.  **Tạo Mô hình Yêu cầu Pydantic (schema `UserUpdate`):**
-    *   Định nghĩa các trường cho thông tin có thể cập nhật (ví dụ: `first_name`, `last_name`, `email`, `phone_number`, `address`).
-    *   Đảm bảo các trường là tùy chọn cho các yêu cầu `PATCH` (sử dụng `Optional` từ `typing` hoặc `None` làm giá trị mặc định).
-    *   Thêm các trình xác thực Pydantic thích hợp (ví dụ: định dạng email, ràng buộc độ dài chuỗi).
-    *   Vị trí: `app/schemas/user.py`
+## 4. Request Parameters
+- **Path Parameters:**
+    - `user_id`: String, required. The unique identifier of the user to be updated.
+- **Form Data (multipart/form-data):**
+    - `fullname`: String, optional. New full name of the user (min_length=3, max_length=50).
+    - `email`: String, optional. New email address of the user.
+    - `phone_number`: String, optional. New phone number of the user (min_length=10, max_length=15).
+    - `avatar_file`: File (UploadFile), optional. New avatar image file for the user. If provided, the existing avatar will be replaced.
 
-## Giai đoạn 2: Xác thực, Ủy quyền và Dependency Injection
+## 5. Request Body Example
+```http
+PUT /api/v1/users/60d0fe4f5311236168a109ca
+Content-Type: multipart/form-data
 
-1.  **Thực hiện Xác thực:**
-    *   Đảm bảo điểm cuối được bảo vệ bởi một dependency xác thực (`get_current_active_user`).
-    *   Trích xuất đối tượng `current_user` từ dependency.
+--boundary
+Content-Disposition: form-data; name="fullname"
 
-2.  **Dependency cho Dịch vụ Người dùng:**
-    *   Inject `UserService` vào điểm cuối bằng cách sử dụng hệ thống dependency injection của FastAPI.
+New Fullname
+--boundary
+Content-Disposition: form-data; name="email"
 
-## Giai đoạn 3: Logic Lớp Dịch vụ (`UserService`)
+new.email@example.com
+--boundary
+Content-Disposition: form-data; name="phone_number"
 
-1.  **Thêm phương thức `update_user` vào `UserService`:**
-    *   Chữ ký phương thức: `async def update_user(self, user_id: str, user_data: UserUpdate) -> User:`
-    *   Logic:
-        *   Nhận `user_id` và schema `UserUpdate`.
-        *   Chuyển đổi `UserUpdate` thành một từ điển, lọc bỏ các giá trị chưa được đặt/None để cập nhật một phần.
-        *   Gọi `UserRepository` để cập nhật người dùng trong cơ sở dữ liệu.
-        *   Trả về đối tượng `User` đã cập nhật.
++84123456789
+--boundary
+Content-Disposition: form-data; name="avatar_file"; filename="new_avatar.png"
+Content-Type: image/png
 
-2.  **Xử lý Lỗi trong Dịch vụ:**
-    *   Xử lý các trường hợp không tìm thấy người dùng.
-    *   Xử lý các lỗi cơ sở dữ liệu tiềm ẩn hoặc vi phạm ràng buộc duy nhất (ví dụ: nếu cập nhật thành email đã tồn tại). Nâng `HTTPException` với các mã trạng thái thích hợp.
+<binary content of new_avatar.png>
+--boundary--
+```
 
-## Giai đoạn 4: Tương tác Lớp Repository (`UserRepository`)
+## 6. Response Schema
+### `UserUpdateResponse`
+This schema defines the structure for the API response after a user's information has been successfully updated.
 
-1.  **Thêm phương thức `update_user` vào `UserRepository`:**
-    *   Chữ ký phương thức: `async def update_user(self, user_id: str, user_data: Dict[str, Any]) -> Optional[User]:`
-    *   Logic:
-        *   Kết nối với collection MongoDB.
-        *   Xây dựng truy vấn cập nhật dựa trên `user_data`.
-        *   Sử dụng `find_one_and_update` với `return_document=ReturnDocument.AFTER` để lấy tài liệu đã cập nhật.
-        *   Chuyển đổi tài liệu MongoDB trở lại mô hình miền `User`.
-        *   Trả về `User` đã cập nhật hoặc `None` nếu không tìm thấy.
+```json
+{
+  "success": true,
+  "message": "Cập nhật thông tin người dùng thành công",
+  "data": {
+    "id": "60d0fe4f5311236168a109ca",
+    "fullname": "New Fullname",
+    "email": "new.email@example.com",
+    "phone_number": "+84123456789",
+    "is_active": true,
+    "role": "user",
+    "avatar_url": "https://example.com/static/uploads/new_avatar_id.png"
+  }
+}
+```
 
-## Giai đoạn 5: Tích hợp vào Router và Kiểm thử
+### `UserUpdateResponse.data` Object
+This object represents the updated user's details.
 
-1.  **Thêm điểm cuối `PATCH /api/v1/users/me` vào `app/api/v1/endpoints/users.py`:**
-    *   Định nghĩa hàm thao tác đường dẫn.
-    *   Inject các dependency: `current_user: User = Depends(get_current_active_user)` và `user_service: UserService = Depends(get_user_service)`.
-    *   Gọi `user_service.update_user` với `current_user.id` và nội dung yêu cầu.
-    *   Trả về dữ liệu người dùng đã cập nhật.
+- `id`: String, required. Unique identifier for the updated user.
+- `fullname`: String, required. Updated full name of the user.
+- `email`: String, required. Updated email address of the user.
+- `phone_number`: String, optional. Updated phone number of the user.
+- `is_active`: Boolean, required. Current active status of the user account.
+- `role`: String, required. The role assigned to the user (e.g., "admin", "user", "editor").
+- `avatar_url`: String, optional. URL to the updated user's avatar image.
 
-2.  **Thực hiện Kiểm thử Đơn vị/Tích hợp:**
-    *   Viết các bài kiểm tra cho xác thực schema `UserUpdate`.
-    *   Viết các bài kiểm tra đơn vị cho phương thức `UserService.update_user` (mocking `UserRepository`).
-    *   Viết các bài kiểm tra tích hợp cho điểm cuối `PATCH /api/v1/users/me`:
-        *   Kiểm tra cập nhật thành công với dữ liệu hợp lệ.
-        *   Kiểm tra cập nhật một phần.
-        *   Kiểm tra truy cập trái phép.
-        *   Kiểm tra dữ liệu đầu vào không hợp lệ.
-        *   Kiểm tra các trường hợp dữ liệu có thể xung đột (ví dụ: ràng buộc duy nhất email).
+## 7. Business Logic/Validation
+- Only authenticated users with "admin" role should be able to access this endpoint.
+- The `user_id` in the path must correspond to an existing user.
+- Email format validation should be applied.
+- Phone number should only contain digits.
+- If `avatar_file` is provided, it should be a valid image file. The old avatar file should be removed from storage, and the new one saved. The `avatar_url` in the database should be updated to reflect the new file's path.
+- If `email` is updated, ensure it's unique (unless it's the user's current email).
+
+## 8. Error Handling
+- `401 Unauthorized`: If the user is not authenticated.
+- `403 Forbidden`: If the authenticated user does not have "admin" permissions.
+- `404 Not Found`: If the `user_id` does not correspond to an existing user.
+- `400 Bad Request`: For invalid input data (e.g., invalid email format, phone number, or file type).
+- `409 Conflict`: If the new email address already exists for another user.
+- `500 Internal Server Error`: For unexpected server issues (e.g., file upload failure, database error).
+
+## 9. Dependencies
+- User repository for fetching and updating user data.
+- File storage service for handling avatar uploads and deletions.
+- Authentication and authorization middleware (specifically `get_admin_user`).
+- Pydantic models (`UserUpdate`, `UserUpdateResponse`) for request/response validation.

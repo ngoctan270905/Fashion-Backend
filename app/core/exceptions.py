@@ -57,3 +57,31 @@ class ConflictException(CustomException):
     """
     def __init__(self, detail: str = "Conflict occurred", headers: dict = None):
         super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail, headers=headers)
+
+class BadRequestException(CustomException):
+    """
+        Ngoại lệ được sử dụng khi request không hợp lệ
+        hoặc dữ liệu gửi lên sai.
+
+        Trả về HTTP 400 Bad Request.
+    """
+    def __init__(self, detail: str = "Bad request", headers: dict = None):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=detail,
+            headers=headers
+        )
+
+class InternalServerException(CustomException):
+    """
+        Ngoại lệ được sử dụng khi xảy ra lỗi hệ thống
+        hoặc lỗi không mong muốn từ server.
+
+        Trả về HTTP 500 Internal Server Error.
+    """
+    def __init__(self, detail: str = "Internal server error", headers: dict = None):
+        super().__init__(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=detail,
+            headers=headers
+        )
